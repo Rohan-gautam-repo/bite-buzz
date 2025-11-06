@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { Address } from "@/types";
 import AddressForm from "@/components/AddressForm";
+import BackButton from "@/components/BackButton";
 import { 
   collection, 
   doc, 
@@ -228,6 +229,7 @@ function AddressesPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
+      <BackButton />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <motion.div

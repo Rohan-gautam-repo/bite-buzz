@@ -6,6 +6,7 @@ import { collection, getDocs, doc, getDoc, query, where, orderBy } from "firebas
 import { db } from "@/lib/firebase/config";
 import { Category, Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
+import BackButton from "@/components/BackButton";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveGuestCartItem } from "@/lib/guestCartUtils";
@@ -159,6 +160,7 @@ export default function CategoryProductsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+      <BackButton destination="/" label="Back to Home" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-600 mb-6">

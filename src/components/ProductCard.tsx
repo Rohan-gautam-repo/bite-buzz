@@ -67,18 +67,14 @@ export default function ProductCard({ product, onAddToCart, isGuest = false }: P
           {product.description}
         </p>
 
-        {/* Stock Status */}
-        <div>
-          {isInStock ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-              ✓ In Stock ({product.stockQuantity} available)
-            </span>
-          ) : (
+        {/* Out of Stock Badge - Only show when stock is 0 */}
+        {!isInStock && (
+          <div>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
               ✗ Out of Stock
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Quantity Selector and Add to Cart */}
         {isInStock && (

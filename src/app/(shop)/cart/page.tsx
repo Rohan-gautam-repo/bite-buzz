@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase/config";
 import { Product, CartItemWithDetails } from "@/types";
 import AddressRequiredCheck from "@/components/AddressRequiredCheck";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import BackButton from "@/components/BackButton";
 import { 
   ShoppingCart, 
   Trash2, 
@@ -135,6 +136,7 @@ export default function CartPage() {
 
   return (
     <ProtectedRoute>
+      <BackButton />
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}

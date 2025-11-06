@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase/config";
 import { deleteUser } from "firebase/auth";
 import { toast } from "react-hot-toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import BackButton from "@/components/BackButton";
 import {
   User,
   Lock,
@@ -267,6 +268,7 @@ function SettingsPageContent() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <BackButton />
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Account Settings</h1>

@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase/config";
 import { Order, OrderStatus } from "@/types";
 import { cancelOrder } from "@/lib/orderUtils";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import BackButton from "@/components/BackButton";
 import { 
   Package, 
   Loader2,
@@ -224,6 +225,7 @@ function OrderHistoryPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
+      <BackButton />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <motion.div

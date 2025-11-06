@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   X,
+  MapPin,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -182,19 +183,6 @@ export default function Navbar({ cartItemCount = 0 }: NavbarProps) {
                       <button
                         onClick={() => {
                           setShowProfileMenu(false);
-                          router.push("/settings");
-                        }}
-                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
-                      >
-                        <Settings className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
-                        <span className="text-gray-700 group-hover:text-orange-600">
-                          Settings
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowProfileMenu(false);
                           router.push("/orders");
                         }}
                         className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
@@ -202,6 +190,32 @@ export default function Navbar({ cartItemCount = 0 }: NavbarProps) {
                         <Package className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
                         <span className="text-gray-700 group-hover:text-orange-600">
                           Order History
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/addresses");
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
+                      >
+                        <MapPin className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
+                        <span className="text-gray-700 group-hover:text-orange-600">
+                          My Addresses
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/settings");
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
+                      >
+                        <Settings className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
+                        <span className="text-gray-700 group-hover:text-orange-600">
+                          Settings
                         </span>
                       </button>
 
@@ -290,23 +304,34 @@ export default function Navbar({ cartItemCount = 0 }: NavbarProps) {
                     <button
                       onClick={() => {
                         setShowMobileMenu(false);
-                        router.push("/settings");
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
-                    >
-                      <Settings className="w-5 h-5 text-gray-600" />
-                      <span className="text-gray-700">Settings</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setShowMobileMenu(false);
                         router.push("/orders");
                       }}
                       className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
                     >
                       <Package className="w-5 h-5 text-gray-600" />
                       <span className="text-gray-700">Order History</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        router.push("/addresses");
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
+                    >
+                      <MapPin className="w-5 h-5 text-gray-600" />
+                      <span className="text-gray-700">My Addresses</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        router.push("/settings");
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
+                    >
+                      <Settings className="w-5 h-5 text-gray-600" />
+                      <span className="text-gray-700">Settings</span>
                     </button>
 
                     <div className="border-t border-gray-200 mt-2 pt-2">
