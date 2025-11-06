@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { seedCategories } from "@/lib/seedData";
 
+// Disable static generation for this route
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * API endpoint to seed categories
  * GET or POST /api/seed/categories

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { seedProducts } from "@/lib/seedProducts";
 
+// Disable static generation for this route
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST() {
   try {
     const result = await seedProducts();
