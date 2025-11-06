@@ -35,34 +35,67 @@ export default function OrderHistoryPage() {
 
   useEffect(() => {
     if (currentUser) {
+      console.log("Current user detected:", currentUser.uid, currentUser.email);
       fetchOrders();
+    } else {
+      console.log("No current user found");
+      setLoading(false);
     }
   }, [currentUser]);
 
   const fetchOrders = async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
       const ordersRef = collection(db, "orders");
-      const q = query(
-        ordersRef,
-        where("userId", "==", currentUser.uid),
-        orderBy("orderDate", "desc"),
-        limit(10)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const ordersData: Order[] = [];
-
-      querySnapshot.forEach((doc) => {
-        ordersData.push({ id: doc.id, ...doc.data() } as Order);
-      });
+      
+      // Try with orderBy first
+      let ordersData: Order[] = [];
+      
+      try {
+        const q = query(
+          ordersRef,
+          where("userId", "==", currentUser.uid),
+          orderBy("orderDate", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        
+        querySnapshot.forEach((doc) => {
+          ordersData.push({ id: doc.id, ...doc.data() } as Order);
+        });
+        
+        console.log(`Fetched ${ordersData.length} orders for user ${currentUser.uid}`);
+      } catch (indexError: any) {
+        // If index error, try without orderBy
+        console.warn("Index not available, fetching without orderBy:", indexError);
+        const simpleQuery = query(
+          ordersRef,
+          where("userId", "==", currentUser.uid)
+        );
+        const querySnapshot = await getDocs(simpleQuery);
+        
+        querySnapshot.forEach((doc) => {
+          ordersData.push({ id: doc.id, ...doc.data() } as Order);
+        });
+        
+        // Sort manually by orderDate
+        ordersData.sort((a, b) => {
+          const dateA = a.orderDate?.toMillis ? a.orderDate.toMillis() : 0;
+          const dateB = b.orderDate?.toMillis ? b.orderDate.toMillis() : 0;
+          return dateB - dateA;
+        });
+        
+        console.log(`Fetched ${ordersData.length} orders for user ${currentUser.uid} (manual sort)`);
+      }
 
       setOrders(ordersData);
     } catch (error) {
       console.error("Error fetching orders:", error);
-      toast.error("Failed to load orders");
+      toast.error("Failed to load orders. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -168,9 +201,14 @@ export default function OrderHistoryPage() {
         >
           <Package className="h-24 w-24 text-gray-300 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-gray-900 mb-3">No Orders Yet</h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 mb-4">
             Looks like you haven't placed any orders yet. Start shopping now!
           </p>
+          {currentUser && (
+            <p className="text-sm text-gray-400 mb-8">
+              User ID: {currentUser.uid}
+            </p>
+          )}
           <button
             onClick={() => router.push("/")}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold flex items-center gap-2 mx-auto transition"
