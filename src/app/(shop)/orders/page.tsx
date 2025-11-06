@@ -20,6 +20,7 @@ import {
   RotateCcw,
   Eye,
   AlertCircle,
+  Wallet,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -299,8 +300,20 @@ function OrderHistoryPageContent() {
                   ))}
                 </div>
 
-                {/* Total Amount */}
-                <div className="border-t pt-3 mb-4">
+                {/* Total Amount & Payment Method */}
+                <div className="border-t pt-3 mb-4 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <Wallet className="h-4 w-4" />
+                      Payment Method
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {order.paymentMethod === "COD" && "💵 Cash on Delivery"}
+                      {order.paymentMethod === "UPI" && "📱 UPI"}
+                      {order.paymentMethod === "Card" && "💳 Card"}
+                      {!order.paymentMethod && "💵 Cash on Delivery"}
+                    </span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">
                       Total Amount

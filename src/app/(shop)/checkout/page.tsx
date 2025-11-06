@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { Product, CartItemWithDetails, Address } from "@/types";
+import { Product, CartItemWithDetails, Address, PaymentMethod } from "@/types";
 import { placeOrder } from "@/lib/orderUtils";
 import { validateStockAvailability } from "@/lib/stockValidation";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -19,6 +19,9 @@ import {
   ArrowLeft,
   CheckCircle,
   AlertCircle,
+  Banknote,
+  Smartphone,
+  Wallet,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -30,6 +33,7 @@ function CheckoutPageContent() {
   
   const [cartItems, setCartItems] = useState<CartItemWithDetails[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("COD");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
@@ -146,7 +150,8 @@ function CheckoutPageContent() {
         currentUser.uid,
         cart!.items,
         selectedAddress,
-        grandTotal
+        grandTotal,
+        selectedPaymentMethod
       );
 
       // Step 3: Clear session storage
@@ -308,6 +313,97 @@ function CheckoutPageContent() {
             )}
           </motion.div>
 
+          {/* Payment Method Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-white rounded-xl shadow-sm p-6"
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Wallet className="h-6 w-6 text-orange-600" />
+              Payment Method
+            </h2>
+
+            <div className="space-y-3">
+              {/* Cash on Delivery */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedPaymentMethod("COD")}
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "COD"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 hover:border-orange-300"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedPaymentMethod === "COD"
+                        ? "border-orange-500"
+                        : "border-gray-300"
+                    }`}>
+                      {selectedPaymentMethod === "COD" && (
+                        <div className="w-3 h-3 rounded-full bg-orange-500" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-4xl">💵</div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">Cash on Delivery</h3>
+                    <p className="text-sm text-gray-600">Pay when your order arrives</p>
+                  </div>
+                  {selectedPaymentMethod === "COD" && (
+                    <CheckCircle className="h-6 w-6 text-orange-500" />
+                  )}
+                </div>
+              </motion.div>
+
+              {/* UPI - Coming Soon */}
+              <div
+                className="border-2 border-gray-200 rounded-lg p-4 opacity-60 cursor-not-allowed bg-gray-50"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                  </div>
+                  <div className="text-4xl">📱</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">UPI</h3>
+                      <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded">
+                        Coming Soon
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">PhonePe, Google Pay, Paytm</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cards - Coming Soon */}
+              <div
+                className="border-2 border-gray-200 rounded-lg p-4 opacity-60 cursor-not-allowed bg-gray-50"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                  </div>
+                  <div className="text-4xl">💳</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">Credit/Debit Cards</h3>
+                      <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded">
+                        Coming Soon
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">Visa, Mastercard, RuPay</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Order Summary Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -332,6 +428,14 @@ function CheckoutPageContent() {
                 ) : (
                   <span className="font-semibold">₹{deliveryCharge}</span>
                 )}
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Payment Method</span>
+                <span className="font-semibold flex items-center gap-1">
+                  {selectedPaymentMethod === "COD" && "💵 Cash on Delivery"}
+                  {selectedPaymentMethod === "UPI" && "📱 UPI"}
+                  {selectedPaymentMethod === "Card" && "💳 Card"}
+                </span>
               </div>
               <div className="border-t pt-3">
                 <div className="flex justify-between items-center">

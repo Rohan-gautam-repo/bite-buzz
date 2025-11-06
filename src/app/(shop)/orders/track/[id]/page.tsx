@@ -6,6 +6,7 @@ import { doc, getDoc, onSnapshot, updateDoc, serverTimestamp } from "firebase/fi
 import { db } from "@/lib/firebase/config";
 import { Order, OrderStatus } from "@/types";
 import { cancelOrder } from "@/lib/orderUtils";
+import { useCart } from "@/contexts/CartContext";
 import { 
   CheckCircle, 
   Package, 
@@ -19,19 +20,26 @@ import {
   Calendar,
   XCircle,
   AlertCircle,
+  RotateCcw,
+  Wallet,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
+import Confetti from "react-confetti";
 
 export default function OrderTrackingPage() {
   const router = useRouter();
   const params = useParams();
   const orderId = params.id as string;
+  const { addToCart } = useCart();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [deliveryCountdown, setDeliveryCountdown] = useState<number | null>(null);
+  const [showDeliveryConfetti, setShowDeliveryConfetti] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -66,6 +74,69 @@ export default function OrderTrackingPage() {
       clearInterval(refreshInterval);
     };
   }, [orderId, router]);
+
+  // Auto-delivery after 20 seconds when dispatched
+  useEffect(() => {
+    if (!order || order.status !== "dispatched" || !orderId) return;
+
+    // Start countdown from 20 seconds
+    setDeliveryCountdown(20);
+
+    const countdownInterval = setInterval(() => {
+      setDeliveryCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownInterval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Auto-deliver after 20 seconds
+    const deliveryTimer = setTimeout(async () => {
+      try {
+        const orderRef = doc(db, "orders", orderId);
+        await updateDoc(orderRef, {
+          status: "delivered",
+          deliveredAt: serverTimestamp(),
+        });
+        toast.success("Order delivered successfully! 🎉");
+      } catch (error) {
+        console.error("Error updating order to delivered:", error);
+      }
+    }, 20000);
+
+    return () => {
+      clearInterval(countdownInterval);
+      clearTimeout(deliveryTimer);
+    };
+  }, [order?.status, orderId]);
+
+  // Show confetti when order is delivered
+  useEffect(() => {
+    if (order?.status === "delivered" && !showDeliveryConfetti) {
+      setShowDeliveryConfetti(true);
+      setTimeout(() => setShowDeliveryConfetti(false), 5000);
+    }
+  }, [order?.status]);
+
+  const handleReorder = async () => {
+    if (!order) return;
+
+    setReordering(true);
+    try {
+      for (const item of order.items) {
+        await addToCart(item.productId, item.quantity);
+      }
+      toast.success("Items added to cart!");
+      router.push("/cart");
+    } catch (error) {
+      console.error("Error reordering:", error);
+      toast.error("Failed to add items to cart");
+    } finally {
+      setReordering(false);
+    }
+  };
 
   const handleCancelOrder = async () => {
     if (!orderId) return;
@@ -136,6 +207,8 @@ export default function OrderTrackingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
+      {showDeliveryConfetti && <Confetti recycle={false} numberOfPieces={500} />}
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -296,9 +369,26 @@ export default function OrderTrackingPage() {
                             <Phone className="w-4 h-4 text-blue-600" />
                             <span className="text-sm">{order.deliveryPartner.phone}</span>
                           </div>
-                          <p className="text-sm text-gray-600 mt-2">
-                            📍 Estimated delivery: 30-40 minutes
-                          </p>
+                          {isStageInProgress("dispatched") && deliveryCountdown !== null && deliveryCountdown > 0 && (
+                            <div className="bg-blue-100 rounded-lg p-3 mt-2">
+                              <p className="text-sm font-semibold text-blue-800 text-center">
+                                🚚 Arriving in {deliveryCountdown} seconds
+                              </p>
+                              <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
+                                <motion.div
+                                  className="bg-blue-600 h-2 rounded-full"
+                                  initial={{ width: "100%" }}
+                                  animate={{ width: `${(deliveryCountdown / 20) * 100}%` }}
+                                  transition={{ duration: 1 }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          {isStageInProgress("dispatched") && (deliveryCountdown === null || deliveryCountdown > 0) && (
+                            <p className="text-sm text-gray-600 mt-2">
+                              📍 Estimated delivery: 20 minutes
+                            </p>
+                          )}
                         </div>
                       )}
                       {isStageInProgress("dispatched") && (
@@ -332,9 +422,14 @@ export default function OrderTrackingPage() {
                       <p className="text-gray-600 text-sm mt-1">
                         {order.deliveredAt && formatDate(order.deliveredAt)}
                       </p>
-                      <p className="text-green-600 text-sm mt-1">
-                        ✅ Order delivered successfully
-                      </p>
+                      <div className="bg-green-50 rounded-lg p-4 mt-3">
+                        <p className="text-green-600 font-semibold text-center mb-2">
+                          ✅ Order delivered successfully!
+                        </p>
+                        <p className="text-sm text-gray-600 text-center">
+                          Thank you for ordering with BiteBuzz! 🎉
+                        </p>
+                      </div>
                     </>
                   ) : (
                     <p className="text-gray-400 text-sm mt-1">Not yet delivered</p>
@@ -396,6 +491,17 @@ export default function OrderTrackingPage() {
               </div>
             ))}
             <div className="border-t pt-3">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-gray-600 flex items-center gap-2">
+                  <Wallet className="h-4 w-4" />
+                  Payment Method
+                </span>
+                <span className="font-semibold text-gray-900">
+                  {order.paymentMethod === "COD" && "💵 Cash on Delivery"}
+                  {order.paymentMethod === "UPI" && "📱 UPI"}
+                  {order.paymentMethod === "Card" && "💳 Card"}
+                </span>
+              </div>
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold text-gray-900">Total Amount</span>
                 <span className="text-2xl font-bold text-orange-600">
@@ -449,6 +555,32 @@ export default function OrderTrackingPage() {
             >
               <XCircle size={20} />
               Cancel Order
+            </button>
+          </motion.div>
+        )}
+
+        {order.status === "delivered" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <button
+              onClick={handleReorder}
+              disabled={reordering}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+            >
+              {reordering ? (
+                <>
+                  <Loader2 className="animate-spin h-5 w-5" />
+                  Adding to Cart...
+                </>
+              ) : (
+                <>
+                  <RotateCcw size={20} />
+                  Order Again
+                </>
+              )}
             </button>
           </motion.div>
         )}

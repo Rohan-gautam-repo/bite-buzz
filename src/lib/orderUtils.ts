@@ -8,7 +8,7 @@ import {
   deleteDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { CartItem, Order, Address, OrderItem } from '@/types';
+import { CartItem, Order, Address, OrderItem, PaymentMethod } from '@/types';
 import { validateStockAvailability } from './stockValidation';
 
 /**
@@ -52,6 +52,7 @@ function generateDeliveryPartner(): { name: string; phone: string } {
  * @param cartItems - Items in the cart
  * @param deliveryAddress - Delivery address for the order
  * @param totalAmount - Total amount of the order
+ * @param paymentMethod - Payment method selected (COD, UPI, Card)
  * @returns Promise with created Order object
  * @throws Error if stock validation fails or transaction fails
  */
@@ -59,7 +60,8 @@ export async function placeOrder(
   userId: string,
   cartItems: CartItem[],
   deliveryAddress: Address,
-  totalAmount: number
+  totalAmount: number,
+  paymentMethod: PaymentMethod = 'COD'
 ): Promise<Order> {
   // Step 1: Validate stock availability
   const stockValidation = await validateStockAvailability(cartItems);
@@ -125,6 +127,7 @@ export async function placeOrder(
         deliveryAddress,
         totalAmount,
         status: 'preparing',
+        paymentMethod,
         deliveryPartner,
         orderDate: serverTimestamp(),
       };

@@ -83,6 +83,7 @@ export type UpdateAddressInput = Partial<Omit<Address, "id">>;
 
 // Order Types
 export type OrderStatus = "preparing" | "dispatched" | "delivered" | "cancelled";
+export type PaymentMethod = "COD" | "UPI" | "Card";
 
 export interface OrderItem {
   productId: string;
@@ -105,6 +106,7 @@ export interface Order {
   deliveryAddress: Address;
   totalAmount: number;
   status: OrderStatus;
+  paymentMethod: PaymentMethod;
   deliveryPartner?: DeliveryPartner;
   orderDate: Timestamp;
   dispatchedAt?: Timestamp;

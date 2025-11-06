@@ -29,43 +29,28 @@ export default function OrderConfirmationPage() {
   const [loading, setLoading] = useState(true);
   const [currentStage, setCurrentStage] = useState<Stage>(1);
   const [showConfetti, setShowConfetti] = useState(true);
-  const [preparationProgress, setPreparationProgress] = useState(0);
 
   useEffect(() => {
     fetchOrder();
   }, [orderId]);
 
   useEffect(() => {
-    // Stage progression timers
+    // Stage progression timers with NEW TIMING
     const stage1Timer = setTimeout(() => {
       setCurrentStage(2);
       setShowConfetti(false);
-    }, 20000); // 20 seconds
+    }, 5000); // 5 seconds
 
     const stage2Timer = setTimeout(() => {
       setCurrentStage(3);
       updateOrderToDispatched();
-    }, 60000); // 60 seconds
+    }, 11000); // 11 seconds total
 
     return () => {
       clearTimeout(stage1Timer);
       clearTimeout(stage2Timer);
     };
   }, []);
-
-  useEffect(() => {
-    // Preparation progress animation (Stage 2)
-    if (currentStage === 2) {
-      const interval = setInterval(() => {
-        setPreparationProgress((prev) => {
-          if (prev >= 100) return 100;
-          return prev + 2.5; // 40 seconds to reach 100%
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [currentStage]);
 
   const fetchOrder = async () => {
     try {
@@ -197,6 +182,14 @@ export default function OrderConfirmationPage() {
                   </div>
                 ))}
                 <div className="border-t pt-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Payment Method</span>
+                    <span className="font-semibold text-gray-900">
+                      {order.paymentMethod === "COD" && "💵 Cash on Delivery"}
+                      {order.paymentMethod === "UPI" && "📱 UPI"}
+                      {order.paymentMethod === "Card" && "💳 Card"}
+                    </span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">Total</span>
                     <span className="text-2xl font-bold text-orange-600">
@@ -210,7 +203,7 @@ export default function OrderConfirmationPage() {
             </motion.div>
           )}
 
-          {/* Stage 2: Preparing Order */}
+          {/* Stage 2: Packing Order */}
           {currentStage === 2 && (
             <motion.div
               key="stage2"
@@ -227,29 +220,33 @@ export default function OrderConfirmationPage() {
               </motion.div>
 
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Packing Your Order 👨‍🍳
+                Packing Your Order �
               </h1>
               <p className="text-gray-600 mb-8">
                 Our kitchen is preparing your delicious food!
               </p>
 
-              <div className="mb-8">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Preparation Progress</span>
-                  <span>{Math.round(preparationProgress)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <motion.div
-                    className="bg-orange-500 h-4 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${preparationProgress}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
+              {/* Simple loading animation - bouncing dots */}
+              <div className="flex justify-center gap-2 mb-8">
+                <motion.div
+                  className="w-3 h-3 bg-orange-500 rounded-full"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                />
+                <motion.div
+                  className="w-3 h-3 bg-orange-500 rounded-full"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                />
+                <motion.div
+                  className="w-3 h-3 bg-orange-500 rounded-full"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                />
               </div>
 
               <div className="text-left space-y-3">
-                <h3 className="font-semibold text-gray-900">Items being prepared:</h3>
+                <h3 className="font-semibold text-gray-900">Items being packed:</h3>
                 {order.items.map((item, index) => (
                   <motion.div
                     key={index}
@@ -323,7 +320,7 @@ export default function OrderConfirmationPage() {
                       <Clock className="w-5 h-5 text-blue-600" />
                       <div>
                         <p className="text-sm text-gray-600">Estimated Delivery</p>
-                        <p className="font-semibold text-gray-900">30-40 minutes</p>
+                        <p className="font-semibold text-gray-900">20 minutes</p>
                       </div>
                     </div>
                   </div>
