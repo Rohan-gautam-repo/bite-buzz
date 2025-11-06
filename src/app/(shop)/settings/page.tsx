@@ -7,6 +7,7 @@ import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { deleteUser } from "firebase/auth";
 import { toast } from "react-hot-toast";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   User,
   Lock,
@@ -32,7 +33,7 @@ interface UserData {
   createdAt: string;
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const { currentUser, updateUsername, updatePassword, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
@@ -786,5 +787,13 @@ export default function SettingsPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute>
+      <SettingsPageContent />
+    </ProtectedRoute>
   );
 }

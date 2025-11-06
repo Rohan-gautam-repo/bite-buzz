@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, orderBy, limit } from "firebase/fire
 import { db } from "@/lib/firebase/config";
 import { Order, OrderStatus } from "@/types";
 import { cancelOrder } from "@/lib/orderUtils";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
   Package, 
   Loader2,
@@ -22,7 +23,7 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 
-export default function OrderHistoryPage() {
+function OrderHistoryPageContent() {
   const router = useRouter();
   const { currentUser } = useAuth();
   const { addToCart } = useCart();
@@ -397,5 +398,13 @@ export default function OrderHistoryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrderHistoryPage() {
+  return (
+    <ProtectedRoute>
+      <OrderHistoryPageContent />
+    </ProtectedRoute>
   );
 }

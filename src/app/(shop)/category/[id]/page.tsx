@@ -7,6 +7,8 @@ import { db } from "@/lib/firebase/config";
 import { Category, Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { saveGuestCartItem } from "@/lib/guestCartUtils";
 import { ChevronRight, Home, Loader2, ShoppingBag, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,6 +17,7 @@ export default function CategoryProductsPage() {
   const router = useRouter();
   const categoryId = params.id as string;
   const { addToCart } = useCart();
+  const { currentUser } = useAuth();
 
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -96,6 +99,20 @@ export default function CategoryProductsPage() {
 
   const handleAddToCart = async (productId: string, quantity: number) => {
     try {
+      // Check if user is logged in
+      if (!currentUser) {
+        // Guest user - save to localStorage and redirect to login
+        saveGuestCartItem(productId, quantity);
+        showToast("Please login to complete your purchase!");
+        
+        // Redirect to login with returnUrl
+        setTimeout(() => {
+          router.push(`/login?returnUrl=/cart`);
+        }, 1500);
+        return;
+      }
+
+      // Logged in user - add to cart normally
       await addToCart(productId, quantity);
       showToast("Product added to cart successfully!");
     } catch (error) {
@@ -205,7 +222,11 @@ export default function CategoryProductsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <ProductCard product={product} onAddToCart={handleAddToCart} />
+                <ProductCard 
+                  product={product} 
+                  onAddToCart={handleAddToCart}
+                  isGuest={!currentUser}
+                />
               </motion.div>
             ))}
           </motion.div>

@@ -145,80 +145,91 @@ export default function Navbar({ cartItemCount = 0 }: NavbarProps) {
               </span>
             </button>
 
-            {/* Profile Dropdown */}
-            <div className="relative" ref={profileMenuRef}>
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors duration-200 group"
-                aria-label="Profile menu"
-                aria-expanded={showProfileMenu}
-              >
-                <User className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
-                <span className="text-gray-700 group-hover:text-orange-600 font-medium">
-                  {username || "Profile"}
-                </span>
-              </button>
+            {/* Profile or Login/Register */}
+            {currentUser ? (
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors duration-200 group"
+                  aria-label="Profile menu"
+                  aria-expanded={showProfileMenu}
+                >
+                  <User className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
+                  <span className="text-gray-700 group-hover:text-orange-600 font-medium">
+                    {username || "Profile"}
+                  </span>
+                </button>
 
-              {/* Dropdown Menu */}
-              <AnimatePresence>
-                {showProfileMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 overflow-hidden"
-                  >
-                    {/* Username Display */}
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm text-gray-500">Signed in as</p>
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {email}
-                      </p>
-                    </div>
-
-                    {/* Menu Items */}
-                    <button
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        router.push("/settings");
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 overflow-hidden"
                     >
-                      <Settings className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
-                      <span className="text-gray-700 group-hover:text-orange-600">
-                        Settings
-                      </span>
-                    </button>
+                      {/* Username Display */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm text-gray-500">Signed in as</p>
+                        <p className="text-sm font-semibold text-gray-800 truncate">
+                          {email}
+                        </p>
+                      </div>
 
-                    <button
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        router.push("/orders");
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
-                    >
-                      <Package className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
-                      <span className="text-gray-700 group-hover:text-orange-600">
-                        Order History
-                      </span>
-                    </button>
-
-                    <div className="border-t border-gray-100 mt-2">
+                      {/* Menu Items */}
                       <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-red-50 transition-colors duration-200 group"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/settings");
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
                       >
-                        <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-600" />
-                        <span className="text-gray-700 group-hover:text-red-600">
-                          Logout
+                        <Settings className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
+                        <span className="text-gray-700 group-hover:text-orange-600">
+                          Settings
                         </span>
                       </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/orders");
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200 group"
+                      >
+                        <Package className="w-5 h-5 text-gray-600 group-hover:text-orange-600" />
+                        <span className="text-gray-700 group-hover:text-orange-600">
+                          Order History
+                        </span>
+                      </button>
+
+                      <div className="border-t border-gray-100 mt-2">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-red-50 transition-colors duration-200 group"
+                        >
+                          <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-600" />
+                          <span className="text-gray-700 group-hover:text-red-600">
+                            Logout
+                          </span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="flex items-center space-x-2 px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200 font-semibold"
+                aria-label="Login or Register"
+              >
+                <User className="w-5 h-5" />
+                <span>Login / Register</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile Navigation */}
@@ -274,43 +285,58 @@ export default function Navbar({ cartItemCount = 0 }: NavbarProps) {
                   <span className="text-gray-700">Home</span>
                 </button>
 
-                <button
-                  onClick={() => {
-                    setShowMobileMenu(false);
-                    router.push("/settings");
-                  }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
-                >
-                  <Settings className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-700">Settings</span>
-                </button>
+                {currentUser ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        router.push("/settings");
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
+                    >
+                      <Settings className="w-5 h-5 text-gray-600" />
+                      <span className="text-gray-700">Settings</span>
+                    </button>
 
-                <button
-                  onClick={() => {
-                    setShowMobileMenu(false);
-                    router.push("/orders");
-                  }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
-                >
-                  <Package className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-700">Order History</span>
-                </button>
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        router.push("/orders");
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-orange-50 transition-colors duration-200"
+                    >
+                      <Package className="w-5 h-5 text-gray-600" />
+                      <span className="text-gray-700">Order History</span>
+                    </button>
 
-                <div className="border-t border-gray-200 mt-2 pt-2">
-                  <div className="px-4 py-2">
-                    <p className="text-sm text-gray-500">Signed in as</p>
-                    <p className="text-sm font-semibold text-gray-800 truncate">
-                      {email}
-                    </p>
-                  </div>
+                    <div className="border-t border-gray-200 mt-2 pt-2">
+                      <div className="px-4 py-2">
+                        <p className="text-sm text-gray-500">Signed in as</p>
+                        <p className="text-sm font-semibold text-gray-800 truncate">
+                          {email}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-red-50 transition-colors duration-200"
+                      >
+                        <LogOut className="w-5 h-5 text-gray-600" />
+                        <span className="text-gray-700">Logout</span>
+                      </button>
+                    </div>
+                  </>
+                ) : (
                   <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-red-50 transition-colors duration-200"
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      router.push("/login");
+                    }}
+                    className="w-full flex items-center space-x-3 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 mx-4 rounded-lg"
                   >
-                    <LogOut className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-700">Logout</span>
+                    <User className="w-5 h-5" />
+                    <span className="font-semibold">Login / Register</span>
                   </button>
-                </div>
+                )}
               </div>
             </motion.div>
           )}

@@ -7,9 +7,10 @@ import { Minus, Plus, ShoppingCart, Check, Loader2 } from "lucide-react";
 interface ProductCardProps {
   product: Product;
   onAddToCart: (productId: string, quantity: number) => Promise<void>;
+  isGuest?: boolean;
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart, isGuest = false }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -119,7 +120,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               {isAdding ? (
                 <>
                   <Loader2 size={20} className="animate-spin" />
-                  Adding...
+                  {isGuest ? "Redirecting..." : "Adding..."}
                 </>
               ) : showSuccess ? (
                 <>
@@ -129,7 +130,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               ) : (
                 <>
                   <ShoppingCart size={20} />
-                  Add to Cart
+                  {isGuest ? "Login to Add" : "Add to Cart"}
                 </>
               )}
             </button>

@@ -7,6 +7,7 @@ import { collection, getDocs, doc, getDoc, query, where } from "firebase/firesto
 import { db } from "@/lib/firebase/config";
 import { Product, CartItemWithDetails } from "@/types";
 import AddressRequiredCheck from "@/components/AddressRequiredCheck";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
   ShoppingCart, 
   Trash2, 
@@ -133,8 +134,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -336,5 +338,6 @@ export default function CartPage() {
         </div>
       )}
     </div>
+    </ProtectedRoute>
   );
 }

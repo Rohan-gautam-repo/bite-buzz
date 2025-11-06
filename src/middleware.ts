@@ -68,9 +68,9 @@ export async function middleware(request: NextRequest) {
   // Handle protected routes
   if (isProtectedRoute) {
     if (!isAuthenticated) {
-      // Not authenticated, redirect to login
+      // Not authenticated, redirect to login with returnUrl
       const url = new URL("/login", request.url);
-      url.searchParams.set("redirect", pathname);
+      url.searchParams.set("returnUrl", pathname);
       return NextResponse.redirect(url);
     }
 

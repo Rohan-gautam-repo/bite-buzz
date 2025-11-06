@@ -1,20 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validators";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import { transferGuestCartToUser, hasGuestCartItems } from "@/lib/guestCartUtils";
+import { auth } from "@/lib/firebase/config";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const { login, currentUser } = useAuth();
+  const { addToCart } = useCart();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const returnUrl = searchParams.get("returnUrl");
+  const hasGuestItems = hasGuestCartItems();
 
   const {
     register,
@@ -29,8 +38,32 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setErrorMessage("");
+      setSuccessMessage("");
+      
       await login(data.email, data.password);
-      router.push("/");
+      
+      // Transfer guest cart if exists
+      if (hasGuestItems) {
+        setSuccessMessage("Transferring your cart items...");
+        
+        // Wait a bit for currentUser to be set
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Get the current user from auth
+        const user = auth.currentUser;
+        if (user) {
+          const result = await transferGuestCartToUser(user.uid, addToCart);
+          
+          if (result.success && result.itemCount > 0) {
+            setSuccessMessage(`Added ${result.itemCount} item(s) to your cart!`);
+          }
+        }
+      }
+      
+      // Redirect to returnUrl or home
+      setTimeout(() => {
+        router.push(returnUrl || "/");
+      }, 500);
     } catch (error: any) {
       setErrorMessage(error.message || "Login failed. Please try again.");
     } finally {
@@ -52,6 +85,22 @@ export default function LoginPage() {
           {errorMessage && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">{errorMessage}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-600">{successMessage}</p>
+            </div>
+          )}
+
+          {/* Guest Cart Notice */}
+          {hasGuestItems && !successMessage && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-600">
+                💡 Your cart items will be saved after login!
+              </p>
             </div>
           )}
 

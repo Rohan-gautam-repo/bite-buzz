@@ -29,8 +29,9 @@ import {
   User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-export default function AddressesPage() {
+function AddressesPageContent() {
   const router = useRouter();
   const { currentUser, loading: authLoading } = useAuth();
 
@@ -467,5 +468,13 @@ export default function AddressesPage() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+export default function AddressesPage() {
+  return (
+    <ProtectedRoute>
+      <AddressesPageContent />
+    </ProtectedRoute>
   );
 }

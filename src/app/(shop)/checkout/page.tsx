@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase/config";
 import { Product, CartItemWithDetails, Address } from "@/types";
 import { placeOrder } from "@/lib/orderUtils";
 import { validateStockAvailability } from "@/lib/stockValidation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
   ShoppingCart, 
   MapPin, 
@@ -22,7 +23,7 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
   const { currentUser } = useAuth();
   const { cart, cartItemCount, loading: cartLoading } = useCart();
@@ -366,5 +367,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <ProtectedRoute>
+      <CheckoutPageContent />
+    </ProtectedRoute>
   );
 }
