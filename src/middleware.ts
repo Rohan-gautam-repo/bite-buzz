@@ -28,9 +28,13 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get("__session")?.value;
   const firebaseToken = request.cookies.get("firebase-token")?.value;
   const userEmail = request.cookies.get("user-email")?.value;
+  const adminSession = request.cookies.get("adminSession")?.value;
 
   // Check if user is authenticated (has any auth token)
   const isAuthenticated = !!(sessionCookie || firebaseToken);
+  
+  // Check if user is admin (has admin session)
+  const isAdmin = adminSession === "true";
 
   // Check if the current path is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -50,16 +54,10 @@ export async function middleware(request: NextRequest) {
 
   // Handle admin routes (excluding public admin routes)
   if (isAdminRoute && !isPublicAdminRoute) {
-    // If not authenticated, redirect to admin login
-    if (!isAuthenticated) {
+    // Check if user has admin session
+    if (!isAdmin) {
+      // Not an admin or not logged in, redirect to admin login
       const url = new URL("/admin/login", request.url);
-      return NextResponse.redirect(url);
-    }
-
-    // Check if user is admin
-    if (userEmail !== "admin@bitebuzz.com") {
-      // Not an admin, redirect to home page
-      const url = new URL("/", request.url);
       return NextResponse.redirect(url);
     }
 

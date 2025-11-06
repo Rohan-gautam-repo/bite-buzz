@@ -133,6 +133,16 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
+
+          {/* Admin Login Link */}
+          <div className="mt-4 text-center">
+            <Link
+              href="/admin/login"
+              className="text-xs text-gray-500 hover:text-purple-600 font-medium transition flex items-center justify-center gap-1"
+            >
+              🔐 Admin Access
+            </Link>
+          </div>
         </div>
       </div>
     </div>
