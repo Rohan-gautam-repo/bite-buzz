@@ -278,7 +278,13 @@ export default function CartPage() {
 
               {/* Checkout Button */}
               <button
-                onClick={() => router.push("/checkout")}
+                onClick={() => {
+                  if (selectedAddress) {
+                    // Store selected address in session storage for checkout page
+                    sessionStorage.setItem('selectedAddressId', selectedAddress);
+                    router.push("/checkout");
+                  }
+                }}
                 disabled={!selectedAddress}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
               >
