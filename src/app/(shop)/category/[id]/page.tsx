@@ -31,6 +31,7 @@ export default function CategoryProductsPage() {
 
   useEffect(() => {
     fetchCategoryAndProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId]);
 
   const fetchCategoryAndProducts = async () => {
@@ -201,7 +202,7 @@ export default function CategoryProductsPage() {
               No Products Available
             </h3>
             <p className="text-gray-600 mb-6">
-              We're currently out of products in this category. Check back soon!
+              We&apos;re currently out of products in this category. Check back soon!
             </p>
             <button
               onClick={() => router.push("/")}

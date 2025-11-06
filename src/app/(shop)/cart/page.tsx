@@ -37,6 +37,7 @@ export default function CartPage() {
       setLoading(false);
       setCartItems([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart]);
 
   const fetchCartProducts = async () => {
@@ -120,7 +121,7 @@ export default function CartPage() {
           <ShoppingCart className="h-24 w-24 text-gray-300 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Your Cart is Empty</h2>
           <p className="text-gray-600 mb-8">
-            Looks like you haven't added anything to your cart yet. Start shopping now!
+            Looks like you haven&apos;t added anything to your cart yet. Start shopping now!
           </p>
           <button
             onClick={() => router.push("/")}

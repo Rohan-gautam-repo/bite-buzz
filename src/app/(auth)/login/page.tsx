@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,7 @@ import { loginSchema, type LoginInput } from "@/lib/validators";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasGuestCartItems } from "@/lib/guestCartUtils";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, currentUser } = useAuth();
@@ -148,7 +148,7 @@ export default function LoginPage() {
           {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/register"
                 className="text-orange-500 hover:text-orange-600 font-medium"
@@ -170,5 +170,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-orange-500" /></div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

@@ -112,6 +112,7 @@ export default function OrderTrackingPage() {
     };
 
     checkAndDeliverOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order?.status, order?.dispatchedAt, orderId]);
 
   // Show confetti and toast when order is delivered

@@ -44,6 +44,7 @@ function OrderHistoryPageContent() {
       console.log("No current user found");
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const fetchOrders = async () => {
@@ -205,7 +206,7 @@ function OrderHistoryPageContent() {
           <Package className="h-24 w-24 text-gray-300 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-gray-900 mb-3">No Orders Yet</h2>
           <p className="text-gray-600 mb-4">
-            Looks like you haven't placed any orders yet. Start shopping now!
+            Looks like you haven&apos;t placed any orders yet. Start shopping now!
           </p>
           {currentUser && (
             <p className="text-sm text-gray-400 mb-8">

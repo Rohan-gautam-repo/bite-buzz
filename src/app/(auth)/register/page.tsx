@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,7 @@ import { registerSchema, type RegisterInput, getPasswordStrength } from "@/lib/v
 import { useAuth } from "@/contexts/AuthContext";
 import { hasGuestCartItems } from "@/lib/guestCartUtils";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { register: registerUser } = useAuth();
@@ -252,5 +252,13 @@ function StrengthItem({ met, text }: { met: boolean; text: string }) {
       )}
       <span className={met ? "text-green-600" : "text-gray-500"}>{text}</span>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-orange-500" /></div>}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

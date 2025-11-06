@@ -49,6 +49,7 @@ function AddressesPageContent() {
     } else if (!authLoading && !currentUser) {
       router.push("/login");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, authLoading, router]);
 
   const fetchAddresses = async () => {

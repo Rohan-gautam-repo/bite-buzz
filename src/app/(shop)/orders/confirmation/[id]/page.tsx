@@ -32,6 +32,7 @@ export default function OrderConfirmationPage() {
 
   useEffect(() => {
     fetchOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function OrderConfirmationPage() {
       clearTimeout(stage1Timer);
       clearTimeout(stage2Timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchOrder = async () => {
@@ -155,7 +157,7 @@ export default function OrderConfirmationPage() {
                 Order Confirmed! 🎉
               </h1>
               <p className="text-gray-600 mb-6">
-                Thank you for your order. We're getting it ready!
+                Thank you for your order. We&apos;re getting it ready!
               </p>
 
               <div className="bg-orange-50 rounded-lg p-4 mb-6">

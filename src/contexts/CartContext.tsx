@@ -138,6 +138,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     autoTransferGuestCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, loading, cart]);
 
   // Reset transfer flag when user logs out

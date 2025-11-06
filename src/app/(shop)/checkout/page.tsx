@@ -59,6 +59,7 @@ function CheckoutPageContent() {
     }
 
     fetchCheckoutData(selectedAddressId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, cart, cartLoading, cartItemCount]);
 
   const fetchCheckoutData = async (addressId: string) => {

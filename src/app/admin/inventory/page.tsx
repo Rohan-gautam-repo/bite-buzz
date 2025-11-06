@@ -186,7 +186,7 @@ export default function AdminInventoryPage() {
                 <Package className="h-8 w-8 text-orange-600" />
                 Product Inventory Management
               </h1>
-              <p className="text-gray-600 mt-1">Manage your store's product catalog</p>
+              <p className="text-gray-600 mt-1">Manage your store&apos;s product catalog</p>
             </div>
             <div className="flex gap-3">
               <button

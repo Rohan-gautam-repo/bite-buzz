@@ -30,6 +30,7 @@ export default function AddressRequiredCheck({
     if (currentUser) {
       fetchAddresses();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const fetchAddresses = async () => {
@@ -198,7 +199,7 @@ export default function AddressRequiredCheck({
                   onClick={() => setShowNoAddressModal(false)}
                   className="text-gray-500 hover:text-gray-700 text-sm"
                 >
-                  I'll do it later
+                  I&apos;ll do it later
                 </button>
               </div>
             </motion.div>
