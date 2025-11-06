@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { collection, getDocs, doc, getDoc, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Product, CartItemWithDetails } from "@/types";
+import AddressRequiredCheck from "@/components/AddressRequiredCheck";
 import { 
   ShoppingCart, 
   Trash2, 
@@ -270,30 +271,10 @@ export default function CartPage() {
               </div>
 
               {/* Delivery Address Selector */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <MapPin size={16} className="inline mr-1" />
-                  Delivery Address
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedAddress}
-                    onChange={(e) => setSelectedAddress(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none pr-10"
-                  >
-                    <option value="">Select delivery address</option>
-                    <option value="home">Home Address</option>
-                    <option value="work">Work Address</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
-                </div>
-                <button
-                  onClick={() => router.push("/addresses")}
-                  className="text-sm text-orange-600 hover:underline mt-2"
-                >
-                  + Add new address
-                </button>
-              </div>
+              <AddressRequiredCheck
+                onAddressSelected={setSelectedAddress}
+                selectedAddressId={selectedAddress}
+              />
 
               {/* Checkout Button */}
               <button
@@ -304,6 +285,12 @@ export default function CartPage() {
                 <ShoppingBag size={20} />
                 Proceed to Checkout
               </button>
+
+              {!selectedAddress && (
+                <p className="text-xs text-amber-600 text-center mt-2">
+                  ⚠️ Please select a delivery address to proceed
+                </p>
+              )}
 
               <p className="text-xs text-gray-500 text-center mt-4">
                 By proceeding, you agree to our Terms & Conditions
