@@ -30,6 +30,18 @@ const productSchema = z.object({
 
 type ProductFormData = z.infer<typeof productSchema>;
 
+// Fallback categories if Firestore is empty
+const FALLBACK_CATEGORIES = [
+  { id: "fruits", name: "Fruits", emoji: "🍎", displayOrder: 1 },
+  { id: "vegetables", name: "Vegetables", emoji: "🥕", displayOrder: 2 },
+  { id: "dairy", name: "Dairy", emoji: "🥛", displayOrder: 3 },
+  { id: "bakery", name: "Bakery", emoji: "🍞", displayOrder: 4 },
+  { id: "meat", name: "Meat", emoji: "🥩", displayOrder: 5 },
+  { id: "seafood", name: "Seafood", emoji: "🦐", displayOrder: 6 },
+  { id: "beverages", name: "Beverages", emoji: "🥤", displayOrder: 7 },
+  { id: "snacks", name: "Snacks", emoji: "🍿", displayOrder: 8 },
+];
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
@@ -70,7 +82,14 @@ export default function EditProductPage() {
           id: doc.id,
           ...doc.data(),
         })) as Category[];
-        setCategories(categoriesData);
+        
+        // Use fetched categories if available, otherwise use fallback
+        if (categoriesData.length > 0) {
+          setCategories(categoriesData);
+        } else {
+          console.warn("No categories found in Firestore, using fallback categories");
+          setCategories(FALLBACK_CATEGORIES as Category[]);
+        }
 
         // Fetch product
         const productRef = doc(db, "products", productId);
@@ -133,9 +152,9 @@ export default function EditProductPage() {
 
   if (isPageLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
         <div className="text-center">
-          <Loader2 className="animate-spin h-12 w-12 text-purple-600 mx-auto mb-4" />
+          <Loader2 className="animate-spin h-12 w-12 text-orange-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading product...</p>
         </div>
       </div>
@@ -147,7 +166,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -159,7 +178,7 @@ export default function EditProductPage() {
             Back to Inventory
           </button>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="h-8 w-8 text-purple-600" />
+            <Package className="h-8 w-8 text-orange-600" />
             Edit Product
           </h1>
           <p className="text-gray-600 mt-1">Update product information</p>
@@ -180,7 +199,7 @@ export default function EditProductPage() {
                 id="name"
                 type="text"
                 placeholder="e.g., Fresh Apple"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition ${
                   errors.name ? "border-red-500" : "border-gray-300"
                 }`}
               />
@@ -199,7 +218,7 @@ export default function EditProductPage() {
                 id="description"
                 rows={3}
                 placeholder="e.g., Crisp and juicy red apples, perfect for snacking or baking."
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition ${
                   errors.description ? "border-red-500" : "border-gray-300"
                 }`}
               />
@@ -216,7 +235,7 @@ export default function EditProductPage() {
               <select
                 {...register("category")}
                 id="category"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition ${
                   errors.category ? "border-red-500" : "border-gray-300"
                 }`}
               >
@@ -246,7 +265,7 @@ export default function EditProductPage() {
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition ${
                     errors.price ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -266,7 +285,7 @@ export default function EditProductPage() {
                   type="number"
                   min="0"
                   placeholder="0"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition ${
                     errors.stockQuantity ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -287,7 +306,7 @@ export default function EditProductPage() {
                 type="text"
                 placeholder="🍎"
                 maxLength={2}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition text-2xl ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition text-2xl ${
                   errors.emoji ? "border-red-500" : "border-gray-300"
                 }`}
               />
@@ -300,7 +319,7 @@ export default function EditProductPage() {
                   href="https://emojipedia.org"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-purple-600 hover:underline"
+                  className="text-orange-600 hover:underline"
                 >
                   Emojipedia
                 </a>
@@ -319,7 +338,7 @@ export default function EditProductPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

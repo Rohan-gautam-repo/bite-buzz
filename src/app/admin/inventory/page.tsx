@@ -32,6 +32,7 @@ export default function AdminInventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Check admin authentication
   useEffect(() => {
@@ -40,6 +41,38 @@ export default function AdminInventoryPage() {
       router.push("/admin/login");
     }
   }, [router]);
+
+  // Seed categories and products
+  const handleSeedData = async () => {
+    if (!confirm("This will seed categories and products. Continue?")) return;
+    
+    setIsSeeding(true);
+    try {
+      // Seed categories first
+      const categoriesResponse = await fetch("/api/seed/categories");
+      const categoriesResult = await categoriesResponse.json();
+      
+      if (!categoriesResult.success) {
+        throw new Error(categoriesResult.message);
+      }
+      
+      // Then seed products
+      const productsResponse = await fetch("/api/seed/products");
+      const productsResult = await productsResponse.json();
+      
+      if (!productsResult.success) {
+        throw new Error(productsResult.message);
+      }
+      
+      alert(`Success! Seeded ${categoriesResult.categoriesSeeded} categories and ${productsResult.productsSeeded} products.`);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error seeding data:", error);
+      alert("Failed to seed data. Please try again.");
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   // Fetch categories
   useEffect(() => {
@@ -133,9 +166,9 @@ export default function AdminInventoryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
         <div className="text-center">
-          <Loader2 className="animate-spin h-12 w-12 text-purple-600 mx-auto mb-4" />
+          <Loader2 className="animate-spin h-12 w-12 text-orange-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading inventory...</p>
         </div>
       </div>
@@ -143,22 +176,40 @@ export default function AdminInventoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                <Package className="h-8 w-8 text-purple-600" />
+                <Package className="h-8 w-8 text-orange-600" />
                 Product Inventory Management
               </h1>
               <p className="text-gray-600 mt-1">Manage your store's product catalog</p>
             </div>
             <div className="flex gap-3">
               <button
+                onClick={handleSeedData}
+                disabled={isSeeding}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Seed database with sample categories and products"
+              >
+                {isSeeding ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Seeding...
+                  </>
+                ) : (
+                  <>
+                    <Package size={20} />
+                    Seed Data
+                  </>
+                )}
+              </button>
+              <button
                 onClick={() => router.push("/admin/inventory/add")}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition"
               >
                 <Plus size={20} />
                 Add New Product
@@ -187,7 +238,7 @@ export default function AdminInventoryPage() {
                 placeholder="Search products or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
@@ -195,7 +246,7 @@ export default function AdminInventoryPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
               <option value="all">All Categories</option>
               {categories.map((category) => (
@@ -240,7 +291,7 @@ export default function AdminInventoryPage() {
             {!searchQuery && selectedCategory === "all" && (
               <button
                 onClick={() => router.push("/admin/inventory/add")}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition"
               >
                 <Plus size={20} />
                 Add Product

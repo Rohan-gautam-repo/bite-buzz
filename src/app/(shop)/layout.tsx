@@ -3,14 +3,14 @@
 import { ReactNode } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useCart } from "@/contexts/CartContext";
 
 interface ShopLayoutProps {
   children: ReactNode;
 }
 
 export default function ShopLayout({ children }: ShopLayoutProps) {
-  // TODO: Replace with actual cart item count from cart context
-  const cartItemCount = 0;
+  const { cartItemCount } = useCart();
 
   return (
     <ProtectedRoute>

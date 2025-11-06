@@ -3,7 +3,7 @@ import { seedCategories } from "@/lib/seedData";
 
 /**
  * API endpoint to seed categories
- * POST /api/seed/categories
+ * GET or POST /api/seed/categories
  */
 export async function POST() {
   try {
@@ -24,4 +24,11 @@ export async function POST() {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Allow GET requests to make it easier to seed from browser
+ */
+export async function GET() {
+  return POST();
 }
