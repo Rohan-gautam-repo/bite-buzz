@@ -34,11 +34,14 @@ export default function CategoryProductsPage() {
       setLoading(true);
       setError(null);
 
+      console.log("Fetching category:", categoryId);
+
       // Fetch category details
       const categoryRef = doc(db, "categories", categoryId);
       const categorySnap = await getDoc(categoryRef);
 
       if (!categorySnap.exists()) {
+        console.error("Category not found:", categoryId);
         setError("Category not found");
         setLoading(false);
         return;
@@ -49,25 +52,43 @@ export default function CategoryProductsPage() {
         ...categorySnap.data(),
       } as Category;
       setCategory(categoryData);
+      console.log("Category loaded:", categoryData);
 
       // Fetch products in this category
       const productsRef = collection(db, "products");
       const q = query(
         productsRef,
-        where("category", "==", categoryId),
-        orderBy("name", "asc")
+        where("category", "==", categoryId)
       );
+      
+      console.log("Fetching products for category:", categoryId);
       const productsSnap = await getDocs(q);
+      console.log("Found products:", productsSnap.docs.length);
 
-      const productsData = productsSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Product[];
+      // Sort products by name on the client side
+      const productsData = productsSnap.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Product[];
+      
+      // Sort alphabetically by name
+      productsData.sort((a, b) => a.name.localeCompare(b.name));
 
       setProducts(productsData);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching category products:", err);
-      setError("Failed to load products. Please try again.");
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      
+      // Provide more specific error messages
+      if (err.code === 'failed-precondition') {
+        setError("Database index missing. Please contact support.");
+      } else if (err.code === 'permission-denied') {
+        setError("Access denied. Please check your permissions.");
+      } else {
+        setError("Failed to load products. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
