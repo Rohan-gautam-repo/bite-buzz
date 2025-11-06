@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Product } from "@/types";
-import { Minus, Plus, ShoppingCart, Check, Loader2 } from "lucide-react";
+import { ShoppingCart, Check, Loader2 } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -11,30 +11,20 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart, isGuest = false }: ProductCardProps) {
-  const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const maxQuantity = Math.min(10, product.stockQuantity);
   const isInStock = product.stockQuantity > 0;
-
-  const handleQuantityChange = (change: number) => {
-    const newQuantity = quantity + change;
-    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
-      setQuantity(newQuantity);
-    }
-  };
 
   const handleAddToCart = async () => {
     try {
       setIsAdding(true);
-      await onAddToCart(product.id, quantity);
+      await onAddToCart(product.id, 1); // Always add 1 item
       
       // Show success animation
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-        setQuantity(1); // Reset quantity after adding
       }, 2000);
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -79,30 +69,6 @@ export default function ProductCard({ product, onAddToCart, isGuest = false }: P
         {/* Quantity Selector and Add to Cart */}
         {isInStock && (
           <div className="space-y-3 pt-2">
-            {/* Quantity Selector */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Quantity:</span>
-              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
-                <button
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={quantity <= 1}
-                  className="w-8 h-8 flex items-center justify-center rounded-md bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  <Minus size={16} className="text-gray-600" />
-                </button>
-                <span className="w-8 text-center font-semibold text-gray-900">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={quantity >= maxQuantity}
-                  className="w-8 h-8 flex items-center justify-center rounded-md bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  <Plus size={16} className="text-gray-600" />
-                </button>
-              </div>
-            </div>
-
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}

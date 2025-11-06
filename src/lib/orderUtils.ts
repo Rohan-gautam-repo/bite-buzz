@@ -77,12 +77,20 @@ export async function placeOrder(
 
   try {
     await runTransaction(db, async (transaction) => {
+      // PHASE 1: ALL READS FIRST
       // Revalidate stock within transaction (to handle concurrent orders)
-      const orderItems: OrderItem[] = [];
+      const productRefs = cartItems.map(item => doc(db, 'products', item.productId));
+      const productSnaps = await Promise.all(
+        productRefs.map(ref => transaction.get(ref))
+      );
 
-      for (const cartItem of cartItems) {
-        const productRef = doc(db, 'products', cartItem.productId);
-        const productSnap = await transaction.get(productRef);
+      // Validate products and prepare order items
+      const orderItems: OrderItem[] = [];
+      const stockUpdates: { ref: any; newStock: number }[] = [];
+
+      for (let i = 0; i < cartItems.length; i++) {
+        const cartItem = cartItems[i];
+        const productSnap = productSnaps[i];
 
         if (!productSnap.exists()) {
           throw new Error(`Product ${cartItem.productId} not found`);
@@ -107,10 +115,19 @@ export async function placeOrder(
           emoji: product.emoji,
         });
 
-        // Deduct stock
+        // Prepare stock update for later
         const newStock = availableStock - cartItem.quantity;
-        transaction.update(productRef, {
-          stockQuantity: newStock,
+        stockUpdates.push({
+          ref: productRefs[i],
+          newStock,
+        });
+      }
+
+      // PHASE 2: ALL WRITES AFTER ALL READS
+      // Update stock for all products
+      for (const update of stockUpdates) {
+        transaction.update(update.ref, {
+          stockQuantity: update.newStock,
           updatedAt: serverTimestamp(),
         });
       }
@@ -169,6 +186,7 @@ export async function placeOrder(
 export async function cancelOrder(orderId: string): Promise<void> {
   try {
     await runTransaction(db, async (transaction) => {
+      // PHASE 1: ALL READS FIRST
       const orderRef = doc(db, 'orders', orderId);
       const orderSnap = await transaction.get(orderRef);
 
@@ -183,21 +201,38 @@ export async function cancelOrder(orderId: string): Promise<void> {
         throw new Error('Cannot cancel order after dispatch');
       }
 
-      // Restore stock for all items
-      for (const item of order.items) {
-        const productRef = doc(db, 'products', item.productId);
-        const productSnap = await transaction.get(productRef);
+      // Get all product documents
+      const productRefs = order.items.map(item => doc(db, 'products', item.productId));
+      const productSnaps = await Promise.all(
+        productRefs.map(ref => transaction.get(ref))
+      );
+
+      // Prepare stock updates
+      const stockUpdates: { ref: any; newStock: number }[] = [];
+      
+      for (let i = 0; i < order.items.length; i++) {
+        const item = order.items[i];
+        const productSnap = productSnaps[i];
 
         if (productSnap.exists()) {
           const product = productSnap.data();
           const currentStock = product.stockQuantity || 0;
           const newStock = currentStock + item.quantity;
 
-          transaction.update(productRef, {
-            stockQuantity: newStock,
-            updatedAt: serverTimestamp(),
+          stockUpdates.push({
+            ref: productRefs[i],
+            newStock,
           });
         }
+      }
+
+      // PHASE 2: ALL WRITES AFTER ALL READS
+      // Restore stock for all items
+      for (const update of stockUpdates) {
+        transaction.update(update.ref, {
+          stockQuantity: update.newStock,
+          updatedAt: serverTimestamp(),
+        });
       }
 
       // Update order status to cancelled
