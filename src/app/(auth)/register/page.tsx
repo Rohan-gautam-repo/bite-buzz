@@ -100,15 +100,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Guest Cart Notice */}
-          {hasGuestItems && !successMessage && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-600">
-                💡 Your cart items will be saved after registration!
-              </p>
-            </div>
-          )}
-
           {/* Registration Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Field */}

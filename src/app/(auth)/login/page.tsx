@@ -95,15 +95,6 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Guest Cart Notice */}
-          {hasGuestItems && !successMessage && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-600">
-                💡 Your cart items will be saved after login!
-              </p>
-            </div>
-          )}
-
           {/* Login Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Field */}
