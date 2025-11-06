@@ -37,7 +37,6 @@ export default function OrderTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [deliveryCountdown, setDeliveryCountdown] = useState<number | null>(null);
   const [showDeliveryConfetti, setShowDeliveryConfetti] = useState(false);
   const [reordering, setReordering] = useState(false);
 
@@ -64,61 +63,65 @@ export default function OrderTrackingPage() {
       }
     );
 
-    // Auto-refresh every 30 seconds as backup
-    const refreshInterval = setInterval(() => {
-      // Snapshot listener already handles this, but keeping for redundancy
-    }, 30000);
-
     return () => {
       unsubscribe();
-      clearInterval(refreshInterval);
     };
   }, [orderId, router]);
 
-  // Auto-delivery after 20 seconds when dispatched
+  // Background auto-delivery checker - runs independently
   useEffect(() => {
     if (!order || order.status !== "dispatched" || !orderId) return;
 
-    // Start countdown from 20 seconds
-    setDeliveryCountdown(20);
+    // Check if order should be delivered based on dispatch time
+    const checkAndDeliverOrder = async () => {
+      if (!order.dispatchedAt) return;
 
-    const countdownInterval = setInterval(() => {
-      setDeliveryCountdown((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(countdownInterval);
-          return 0;
+      const dispatchTime = order.dispatchedAt.toDate();
+      const currentTime = new Date();
+      const elapsedSeconds = (currentTime.getTime() - dispatchTime.getTime()) / 1000;
+
+      // If 20 seconds have passed since dispatch, auto-deliver
+      if (elapsedSeconds >= 20) {
+        try {
+          const orderRef = doc(db, "orders", orderId);
+          await updateDoc(orderRef, {
+            status: "delivered",
+            deliveredAt: serverTimestamp(),
+          });
+          // Toast will be shown when the status updates via the listener
+        } catch (error) {
+          console.error("Error updating order to delivered:", error);
         }
-        return prev - 1;
-      });
-    }, 1000);
+      } else {
+        // Schedule delivery for the remaining time
+        const remainingTime = (20 - elapsedSeconds) * 1000;
+        const deliveryTimer = setTimeout(async () => {
+          try {
+            const orderRef = doc(db, "orders", orderId);
+            await updateDoc(orderRef, {
+              status: "delivered",
+              deliveredAt: serverTimestamp(),
+            });
+          } catch (error) {
+            console.error("Error updating order to delivered:", error);
+          }
+        }, remainingTime);
 
-    // Auto-deliver after 20 seconds
-    const deliveryTimer = setTimeout(async () => {
-      try {
-        const orderRef = doc(db, "orders", orderId);
-        await updateDoc(orderRef, {
-          status: "delivered",
-          deliveredAt: serverTimestamp(),
-        });
-        toast.success("Order delivered successfully! 🎉");
-      } catch (error) {
-        console.error("Error updating order to delivered:", error);
+        return () => clearTimeout(deliveryTimer);
       }
-    }, 20000);
-
-    return () => {
-      clearInterval(countdownInterval);
-      clearTimeout(deliveryTimer);
     };
-  }, [order?.status, orderId]);
 
-  // Show confetti when order is delivered
+    checkAndDeliverOrder();
+  }, [order?.status, order?.dispatchedAt, orderId]);
+
+  // Show confetti and toast when order is delivered
   useEffect(() => {
     if (order?.status === "delivered" && !showDeliveryConfetti) {
       setShowDeliveryConfetti(true);
+      toast.success("Order delivered successfully! 🎉");
       setTimeout(() => setShowDeliveryConfetti(false), 5000);
     }
-  }, [order?.status]);
+  }, [order?.status, showDeliveryConfetti]);
 
   const handleReorder = async () => {
     if (!order) return;
@@ -369,26 +372,9 @@ export default function OrderTrackingPage() {
                             <Phone className="w-4 h-4 text-blue-600" />
                             <span className="text-sm">{order.deliveryPartner.phone}</span>
                           </div>
-                          {isStageInProgress("dispatched") && deliveryCountdown !== null && deliveryCountdown > 0 && (
-                            <div className="bg-blue-100 rounded-lg p-3 mt-2">
-                              <p className="text-sm font-semibold text-blue-800 text-center">
-                                🚚 Arriving in {deliveryCountdown} seconds
-                              </p>
-                              <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-                                <motion.div
-                                  className="bg-blue-600 h-2 rounded-full"
-                                  initial={{ width: "100%" }}
-                                  animate={{ width: `${(deliveryCountdown / 20) * 100}%` }}
-                                  transition={{ duration: 1 }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          {isStageInProgress("dispatched") && (deliveryCountdown === null || deliveryCountdown > 0) && (
-                            <p className="text-sm text-gray-600 mt-2">
-                              📍 Estimated delivery: 20 minutes
-                            </p>
-                          )}
+                          <p className="text-sm text-gray-600 mt-2">
+                            📍 Estimated delivery: 20 minutes
+                          </p>
                         </div>
                       )}
                       {isStageInProgress("dispatched") && (
