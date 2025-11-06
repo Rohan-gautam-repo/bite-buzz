@@ -8,15 +8,12 @@ import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validators";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
-import { transferGuestCartToUser, hasGuestCartItems } from "@/lib/guestCartUtils";
-import { auth } from "@/lib/firebase/config";
+import { hasGuestCartItems } from "@/lib/guestCartUtils";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, currentUser } = useAuth();
-  const { addToCart } = useCart();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -42,28 +39,15 @@ export default function LoginPage() {
       
       await login(data.email, data.password);
       
-      // Transfer guest cart if exists
+      // Show message if there are guest items (they'll be auto-transferred by CartContext)
       if (hasGuestItems) {
-        setSuccessMessage("Transferring your cart items...");
-        
-        // Wait a bit for currentUser to be set
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Get the current user from auth
-        const user = auth.currentUser;
-        if (user) {
-          const result = await transferGuestCartToUser(user.uid, addToCart);
-          
-          if (result.success && result.itemCount > 0) {
-            setSuccessMessage(`Added ${result.itemCount} item(s) to your cart!`);
-          }
-        }
+        setSuccessMessage("Logging in and transferring your cart...");
       }
       
-      // Redirect to returnUrl or home
+      // Redirect to returnUrl or home after a brief delay
       setTimeout(() => {
         router.push(returnUrl || "/");
-      }, 500);
+      }, 1000);
     } catch (error: any) {
       setErrorMessage(error.message || "Login failed. Please try again.");
     } finally {

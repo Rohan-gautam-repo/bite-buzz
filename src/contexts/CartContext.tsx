@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import {
   doc,
   setDoc,
@@ -13,6 +13,7 @@ import {
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "./AuthContext";
 import { Cart, CartItem } from "@/types";
+import { getGuestCart, clearGuestCart } from "@/lib/guestCartUtils";
 
 interface CartContextType {
   cart: Cart | null;
@@ -23,6 +24,7 @@ interface CartContextType {
   removeFromCart: (productId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   fetchCart: () => Promise<void>;
+  transferGuestCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,6 +41,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { currentUser } = useAuth();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasTransferredRef = useRef(false);
 
   // Calculate total items in cart
   const cartItemCount = cart?.items.reduce((total, item) => total + item.quantity, 0) || 0;
@@ -105,6 +108,43 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => unsubscribe();
+  }, [currentUser]);
+
+  // Auto-transfer guest cart when user logs in (only once)
+  useEffect(() => {
+    const autoTransferGuestCart = async () => {
+      // Only run if user just logged in and hasn't transferred yet
+      if (currentUser && !loading && cart && !hasTransferredRef.current) {
+        // Check if there are guest cart items to transfer
+        const guestCartItems = getGuestCart();
+        if (guestCartItems.length > 0) {
+          hasTransferredRef.current = true; // Prevent multiple transfers
+          console.log("User logged in, auto-transferring guest cart");
+          
+          // Transfer items
+          for (const item of guestCartItems) {
+            try {
+              await addToCart(item.productId, item.quantity);
+            } catch (error) {
+              console.error(`Failed to transfer item ${item.productId}:`, error);
+            }
+          }
+          
+          // Clear guest cart after successful transfer
+          clearGuestCart();
+          console.log("Guest cart transfer completed and cleared");
+        }
+      }
+    };
+
+    autoTransferGuestCart();
+  }, [currentUser, loading, cart]);
+
+  // Reset transfer flag when user logs out
+  useEffect(() => {
+    if (!currentUser) {
+      hasTransferredRef.current = false;
+    }
   }, [currentUser]);
 
   // Add item to cart
@@ -252,6 +292,48 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Transfer guest cart items to user's cart after login
+  const transferGuestCart = async () => {
+    if (!currentUser) {
+      console.log("No user logged in, skipping guest cart transfer");
+      return;
+    }
+
+    try {
+      const guestCartItems = getGuestCart();
+      
+      if (guestCartItems.length === 0) {
+        console.log("No guest cart items to transfer");
+        return;
+      }
+
+      console.log(`Transferring ${guestCartItems.length} guest cart items to user cart`);
+
+      // Wait for cart to be loaded
+      if (!cart) {
+        console.log("Cart not loaded yet, fetching...");
+        await fetchCart();
+      }
+
+      // Add each guest cart item to user's cart
+      for (const item of guestCartItems) {
+        try {
+          await addToCart(item.productId, item.quantity);
+        } catch (error) {
+          console.error(`Failed to transfer item ${item.productId}:`, error);
+          // Continue with other items even if one fails
+        }
+      }
+
+      // Clear guest cart after successful transfer
+      clearGuestCart();
+      console.log("Guest cart transfer completed and cleared");
+    } catch (error) {
+      console.error("Error transferring guest cart:", error);
+      // Don't throw error to prevent blocking the login process
+    }
+  };
+
   const value = {
     cart,
     cartItemCount,
@@ -261,6 +343,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeFromCart,
     clearCart,
     fetchCart,
+    transferGuestCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
