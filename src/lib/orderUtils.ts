@@ -6,6 +6,7 @@ import {
   runTransaction,
   serverTimestamp,
   deleteDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { CartItem, Order, Address, OrderItem } from '@/types';
 import { validateStockAvailability } from './stockValidation';
@@ -154,5 +155,56 @@ export async function placeOrder(
   } catch (error: any) {
     console.error('Error placing order:', error);
     throw new Error(error.message || 'Failed to place order. Please try again.');
+  }
+}
+
+/**
+ * Cancels an order and restores stock to products
+ * @param orderId - ID of the order to cancel
+ * @throws Error if order cannot be cancelled or transaction fails
+ */
+export async function cancelOrder(orderId: string): Promise<void> {
+  try {
+    await runTransaction(db, async (transaction) => {
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await transaction.get(orderRef);
+
+      if (!orderSnap.exists()) {
+        throw new Error('Order not found');
+      }
+
+      const order = orderSnap.data() as Order;
+
+      // Check if order can be cancelled
+      if (order.status !== 'preparing') {
+        throw new Error('Cannot cancel order after dispatch');
+      }
+
+      // Restore stock for all items
+      for (const item of order.items) {
+        const productRef = doc(db, 'products', item.productId);
+        const productSnap = await transaction.get(productRef);
+
+        if (productSnap.exists()) {
+          const product = productSnap.data();
+          const currentStock = product.stockQuantity || 0;
+          const newStock = currentStock + item.quantity;
+
+          transaction.update(productRef, {
+            stockQuantity: newStock,
+            updatedAt: serverTimestamp(),
+          });
+        }
+      }
+
+      // Update order status to cancelled
+      transaction.update(orderRef, {
+        status: 'cancelled',
+        cancelledAt: serverTimestamp(),
+      });
+    });
+  } catch (error: any) {
+    console.error('Error cancelling order:', error);
+    throw new Error(error.message || 'Failed to cancel order. Please try again.');
   }
 }
