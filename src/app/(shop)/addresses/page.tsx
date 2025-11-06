@@ -79,12 +79,15 @@ function AddressesPageContent() {
   };
 
   const handleAddAddress = async (addressData: Omit<Address, "id">) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      showToast("User not authenticated", "error");
+      return;
+    }
 
     try {
       const newAddress: Address = {
         ...addressData,
-        id: `addr_${Date.now()}`,
+        id: `addr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
 
       let updatedAddresses = [...addresses];
@@ -97,26 +100,45 @@ function AddressesPageContent() {
         }));
       }
 
+      // If this is the first address, make it default
+      if (updatedAddresses.length === 0) {
+        newAddress.isDefault = true;
+      }
+
       updatedAddresses.push(newAddress);
 
       const addressBookRef = doc(db, "addressBooks", currentUser.uid);
-      await setDoc(addressBookRef, {
+      
+      // Build the data object - only include createdAt for new address books
+      const addressBookData: any = {
         userId: currentUser.uid,
         addresses: updatedAddresses,
         updatedAt: serverTimestamp(),
-      });
+      };
+      
+      // Only set createdAt if this is the first address (new address book)
+      if (addresses.length === 0) {
+        addressBookData.createdAt = serverTimestamp();
+      }
+      
+      // Use setDoc with merge to ensure we don't lose any data
+      await setDoc(addressBookRef, addressBookData, { merge: true });
 
       setAddresses(updatedAddresses);
       setShowForm(false);
       showToast("Address added successfully", "success");
     } catch (error) {
       console.error("Error adding address:", error);
-      showToast("Failed to add address", "error");
+      const errorMessage = error instanceof Error ? error.message : "Failed to add address";
+      showToast(errorMessage, "error");
     }
   };
 
   const handleEditAddress = async (addressData: Omit<Address, "id">) => {
-    if (!currentUser || !editingAddress) return;
+    if (!currentUser || !editingAddress) {
+      showToast("User not authenticated or no address selected", "error");
+      return;
+    }
 
     try {
       let updatedAddresses = addresses.map((addr) => {
@@ -131,10 +153,24 @@ function AddressesPageContent() {
       });
 
       const addressBookRef = doc(db, "addressBooks", currentUser.uid);
-      await updateDoc(addressBookRef, {
-        addresses: updatedAddresses,
-        updatedAt: serverTimestamp(),
-      });
+      
+      // Check if document exists before updating
+      const addressBookSnap = await getDoc(addressBookRef);
+      
+      if (addressBookSnap.exists()) {
+        await updateDoc(addressBookRef, {
+          addresses: updatedAddresses,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        // If document doesn't exist, create it with setDoc
+        await setDoc(addressBookRef, {
+          userId: currentUser.uid,
+          addresses: updatedAddresses,
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+        });
+      }
 
       setAddresses(updatedAddresses);
       setEditingAddress(undefined);
@@ -142,33 +178,56 @@ function AddressesPageContent() {
       showToast("Address updated successfully", "success");
     } catch (error) {
       console.error("Error updating address:", error);
-      showToast("Failed to update address", "error");
+      const errorMessage = error instanceof Error ? error.message : "Failed to update address";
+      showToast(errorMessage, "error");
     }
   };
 
   const handleDeleteAddress = async (addressId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      showToast("User not authenticated", "error");
+      return;
+    }
 
     try {
-      const updatedAddresses = addresses.filter((addr) => addr.id !== addressId);
+      const addressToDelete = addresses.find(addr => addr.id === addressId);
+      let updatedAddresses = addresses.filter((addr) => addr.id !== addressId);
+
+      // If the deleted address was default and there are other addresses, make the first one default
+      if (addressToDelete?.isDefault && updatedAddresses.length > 0) {
+        updatedAddresses[0].isDefault = true;
+      }
 
       const addressBookRef = doc(db, "addressBooks", currentUser.uid);
-      await updateDoc(addressBookRef, {
-        addresses: updatedAddresses,
-        updatedAt: serverTimestamp(),
-      });
+      
+      // Check if document exists before updating
+      const addressBookSnap = await getDoc(addressBookRef);
+      
+      if (addressBookSnap.exists()) {
+        await updateDoc(addressBookRef, {
+          addresses: updatedAddresses,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        showToast("Address book not found", "error");
+        return;
+      }
 
       setAddresses(updatedAddresses);
       setDeleteConfirm(null);
       showToast("Address deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting address:", error);
-      showToast("Failed to delete address", "error");
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete address";
+      showToast(errorMessage, "error");
     }
   };
 
   const handleSetDefault = async (addressId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      showToast("User not authenticated", "error");
+      return;
+    }
 
     try {
       const updatedAddresses = addresses.map((addr) => ({
@@ -177,16 +236,26 @@ function AddressesPageContent() {
       }));
 
       const addressBookRef = doc(db, "addressBooks", currentUser.uid);
-      await updateDoc(addressBookRef, {
-        addresses: updatedAddresses,
-        updatedAt: serverTimestamp(),
-      });
+      
+      // Check if document exists before updating
+      const addressBookSnap = await getDoc(addressBookRef);
+      
+      if (addressBookSnap.exists()) {
+        await updateDoc(addressBookRef, {
+          addresses: updatedAddresses,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        showToast("Address book not found", "error");
+        return;
+      }
 
       setAddresses(updatedAddresses);
       showToast("Default address updated", "success");
     } catch (error) {
       console.error("Error setting default address:", error);
-      showToast("Failed to set default address", "error");
+      const errorMessage = error instanceof Error ? error.message : "Failed to set default address";
+      showToast(errorMessage, "error");
     }
   };
 
@@ -377,7 +446,9 @@ function AddressesPageContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto"
+              // align to top on small viewports so long modals don't get cut off;
+              // allow scrolling on the backdrop
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-4 z-50 overflow-y-auto"
               onClick={closeForm}
             >
               <motion.div
@@ -385,7 +456,9 @@ function AddressesPageContent() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full my-8"
+                // constrain height so the modal never grows beyond the viewport
+                // and allow internal vertical scrolling for long forms
+                className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full my-8 max-h-[calc(100vh-6rem)] overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
