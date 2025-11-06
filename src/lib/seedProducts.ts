@@ -5,7 +5,7 @@ import {
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "./firebase/config";
+import { db, isFirebaseConfigured } from "./firebase/config";
 import { CreateProductInput } from "@/types";
 
 // Product data for each category
@@ -479,6 +479,14 @@ const productsByCategory: Record<string, CreateProductInput[]> = {
 export async function seedProducts() {
   try {
     console.log("Starting product seeding...");
+
+    // Check if Firebase is configured
+    if (!isFirebaseConfigured()) {
+      return {
+        success: false,
+        message: "Firebase is not configured. Please add environment variables.",
+      };
+    }
 
     // Check if products already exist
     const productsRef = collection(db, "products");

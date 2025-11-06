@@ -1,5 +1,5 @@
 import { collection, getDocs, writeBatch, doc } from "firebase/firestore";
-import { db } from "./firebase/config";
+import { db, isFirebaseConfigured } from "./firebase/config";
 import { CreateCategoryInput } from "@/types";
 
 const categories: CreateCategoryInput[] = [
@@ -23,6 +23,14 @@ export async function seedCategories(): Promise<{
   count?: number;
 }> {
   try {
+    // Check if Firebase is configured
+    if (!isFirebaseConfigured()) {
+      return {
+        success: false,
+        message: "Firebase is not configured. Please add environment variables.",
+      };
+    }
+
     // Check if categories already exist
     const categoriesRef = collection(db, "categories");
     const snapshot = await getDocs(categoriesRef);
