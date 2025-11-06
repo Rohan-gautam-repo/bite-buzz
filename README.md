@@ -117,7 +117,48 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## 🏗️ Project Structure
+## � Seeding Initial Data
+
+### Seed Categories
+
+The project includes a seed script to populate initial categories in Firestore.
+
+**Option 1: Using API Endpoint**
+
+1. Start the development server:
+```bash
+npm run dev
+```
+
+2. Make a POST request to the seed endpoint:
+```bash
+# Using curl
+curl -X POST http://localhost:3000/api/seed/categories
+
+# Using PowerShell
+Invoke-WebRequest -Uri http://localhost:3000/api/seed/categories -Method POST
+```
+
+**Option 2: Using the Script Directly** (requires ts-node)
+
+```bash
+npm install -D ts-node esbuild-register
+npm run seed:categories
+```
+
+The seed script will create 8 categories:
+- 🍎 Fruits
+- 🥕 Vegetables
+- 🥛 Dairy
+- 🍞 Bakery
+- 🍖 Meat
+- 🐟 Seafood
+- 🥤 Beverages
+- 🍿 Snacks
+
+**Note**: The script will check if categories already exist and won't duplicate them.
+
+## �🏗️ Project Structure
 
 ```
 bite-buzz/
@@ -158,6 +199,7 @@ The app uses a vibrant, food-themed color palette:
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run seed:categories` - Seed initial categories to Firestore
 
 ## 🔒 Security Rules Overview
 
